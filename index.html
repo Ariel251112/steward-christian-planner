@@ -42,6 +42,25 @@ dialog{width:min(92vw,560px);border:0;border-radius:22px;padding:0}.modal{paddin
 .archive-empty{font-size:11px;color:var(--muted);padding:8px 0}
 @media(max-width:520px){.archive-tools{grid-template-columns:1fr}}
 
+
+/* v1.3.0 — consistent date controls, archives, and personalized theme */
+.date-control{position:relative}
+.date-control input[type="text"]{padding-right:44px}
+.date-picker-btn{position:absolute;right:1px;bottom:1px;height:42px;width:42px;border:0;border-left:1px solid var(--line);background:transparent;color:var(--deep);font-size:17px;cursor:pointer}
+.date-native{position:absolute;width:1px!important;height:1px!important;opacity:0;pointer-events:none;left:0;bottom:0;padding:0!important;border:0!important}
+.archive-section{margin-top:10px}
+.archive-entry .archive-label{display:block;margin-top:7px;margin-bottom:2px;font-size:9px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--mid)}
+.archive-entry .archive-label:first-of-type{margin-top:0}
+.theme-presets{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:10px 0}
+.theme-preset{border:1px solid var(--line);background:#fff;border-radius:13px;padding:11px;text-align:left;color:var(--text);font-weight:800;cursor:pointer}
+.theme-preset.active{outline:2px solid var(--mid);outline-offset:1px}
+.swatch{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:7px;vertical-align:-2px;border:1px solid #00000018}
+.custom-theme{border-top:1px solid var(--line);padding-top:13px;margin-top:12px}
+.color-row{display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:center}
+input[type="color"]{height:48px;padding:4px}
+.rgb-values{font-size:10px;color:var(--muted);margin-top:6px}
+.settings-note{font-size:11px;color:var(--muted)}
+
 @media(min-width:700px){.three{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
@@ -82,7 +101,11 @@ dialog{width:min(92vw,560px);border:0;border-radius:22px;padding:0}.modal{paddin
     <div class="archive-panel" id="intentionArchive">
       <div class="title"><div><h2>Saved Intentions</h2><span>Search your past intentions</span></div></div>
       <div class="archive-tools">
-        <div class="field"><label>Date</label><input type="date" id="intentionSearchDate"></div>
+        <div class="field"><label>Date</label><div class="date-control">
+      <input type="text" id="intentionSearchDateText" placeholder="YYYY/MM/DD" inputmode="numeric" maxlength="10">
+      <button type="button" class="date-picker-btn" data-date-target="intentionSearchDateNative" aria-label="Choose date">▣</button>
+      <input type="date" class="date-native" id="intentionSearchDateNative">
+    </div></div>
         <div class="field"><label>Keyword</label><input id="intentionSearchKeyword" placeholder="e.g. patience, team, rest"></div>
       </div>
       <div class="archive-list" id="intentionArchiveList"></div>
@@ -101,11 +124,27 @@ dialog{width:min(92vw,560px);border:0;border-radius:22px;padding:0}.modal{paddin
   <div class="card">
     <div class="title"><div><h2>Daily Journal</h2><span>Your private daily record</span></div></div>
     <div class="date" id="jdisplay"></div>
-    <div class="field"><label>Journal date</label><input type="date" id="jdate"></div>
+    <div class="field"><label>Journal date</label><div class="date-control">
+      <input type="text" id="jdateText" placeholder="YYYY/MM/DD" inputmode="numeric" maxlength="10">
+      <button type="button" class="date-picker-btn" data-date-target="jdateNative" aria-label="Choose date">▣</button>
+      <input type="date" class="date-native" id="jdateNative">
+    </div></div>
     <p class="prompt">What happened today, and what do I want to remember?</p>
     <textarea id="jtext"></textarea>
     <button class="primary" id="saveJournal">Save Journal</button>
-    <div class="history" id="jhistory"></div>
+    <button class="secondary archive-toggle" id="toggleJournalArchive">View Journal Archive</button>
+    <div class="archive-panel" id="journalArchive">
+      <div class="title"><div><h2>Journal Archive</h2><span>Search your past journal entries</span></div></div>
+      <div class="archive-tools">
+        <div class="field"><label>Date</label><div class="date-control">
+          <input type="text" id="journalSearchDateText" placeholder="YYYY/MM/DD" inputmode="numeric" maxlength="10">
+          <button type="button" class="date-picker-btn" data-date-target="journalSearchDateNative" aria-label="Choose date">▣</button>
+          <input type="date" class="date-native" id="journalSearchDateNative">
+        </div></div>
+        <div class="field"><label>Keyword</label><input id="journalSearchKeyword" placeholder="e.g. faith, work, family"></div>
+      </div>
+      <div class="archive-list" id="journalArchiveList"></div>
+    </div>
   </div>
 </section>
 
@@ -113,17 +152,49 @@ dialog{width:min(92vw,560px);border:0;border-radius:22px;padding:0}.modal{paddin
   <div class="card">
     <div class="title"><div><h2>Prayer & Reflection</h2><span>A quiet space.</span></div></div>
     <p class="prompt">Where do I need wisdom, patience, courage, or grace today?</p>
-    <textarea id="reflection"></textarea>
+    <div class="date" id="reflectionDisplayDate"></div>
+    <textarea id="reflection" placeholder="Write your prayer or reflection for today..."></textarea>
+    <div class="save-row"><button class="primary" id="saveReflection">Save Reflection</button><span class="saved-status" id="reflectionStatus"></span></div>
   </div>
   <div class="card">
     <div class="title"><div><h2>Gratitude</h2><span>Notice what was good.</span></div></div>
     <input id="ginput" placeholder="I'm grateful for...">
     <button class="primary" id="saveG" style="margin-top:8px">Save Gratitude</button>
-    <div class="history" id="glist"></div>
+    <button class="secondary archive-toggle" id="toggleReflectionArchive">View Reflection Archive</button>
+    <div class="archive-panel" id="reflectionArchive">
+      <div class="title"><div><h2>Reflection Archive</h2><span>Search Prayer & Reflection and Gratitude</span></div></div>
+      <div class="archive-tools">
+        <div class="field"><label>Date</label><div class="date-control">
+          <input type="text" id="reflectionSearchDateText" placeholder="YYYY/MM/DD" inputmode="numeric" maxlength="10">
+          <button type="button" class="date-picker-btn" data-date-target="reflectionSearchDateNative" aria-label="Choose date">▣</button>
+          <input type="date" class="date-native" id="reflectionSearchDateNative">
+        </div></div>
+        <div class="field"><label>Keyword</label><input id="reflectionSearchKeyword" placeholder="e.g. wisdom, family, grateful"></div>
+      </div>
+      <div class="archive-list" id="reflectionArchiveList"></div>
+    </div>
   </div>
 </section>
 
 <section id="settings" class="view">
+  <div class="card">
+    <div class="title"><div><h2>Appearance</h2><span>Make STEWARD feel like your own</span></div></div>
+    <p class="settings-note">Choose a theme for this device. Your planner content stays unchanged.</p>
+    <div class="theme-presets">
+      <button class="theme-preset" id="themePurple" type="button"><span class="swatch" style="background:#6f4589"></span>Royal Purple</button>
+      <button class="theme-preset" id="themeBlue" type="button"><span class="swatch" style="background:#3f6fa6"></span>Calm Blue</button>
+    </div>
+    <div class="custom-theme">
+      <div class="field"><label>Custom RGB Color</label>
+        <div class="color-row">
+          <input type="color" id="themeColor" value="#6f4589" aria-label="Custom theme color">
+          <div><strong id="themeHex">#6F4589</strong><div class="rgb-values" id="themeRgb">RGB 111, 69, 137</div></div>
+        </div>
+      </div>
+      <button class="secondary" id="applyCustomTheme" type="button">Apply Custom Color</button>
+      <button class="secondary" id="resetTheme" type="button" style="margin-left:6px">Reset to Royal Purple</button>
+    </div>
+  </div>
   <div class="card">
     <div class="title"><div><h2>Local Data</h2><span>Stored on this device</span></div></div>
     <p style="font-size:11px;color:var(--muted)">Export a backup regularly. Clearing Chrome site data can erase local content.</p>
@@ -150,7 +221,11 @@ dialog{width:min(92vw,560px);border:0;border-radius:22px;padding:0}.modal{paddin
     <div class="field"><label>Category</label><select id="tcat"><option>Work</option><option>People</option><option>Planning</option><option>Service</option><option>Church</option><option>Personal</option></select></div>
     <div class="field"><label>Priority</label><select id="tpri"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
   </div>
-  <div class="field"><label>Due date</label><input type="date" id="tdue"></div>
+  <div class="field"><label>Due date</label><div class="date-control">
+    <input type="text" id="tdueText" placeholder="YYYY/MM/DD" inputmode="numeric" maxlength="10">
+    <button type="button" class="date-picker-btn" data-date-target="tdueNative" aria-label="Choose date">▣</button>
+    <input type="date" class="date-native" id="tdueNative">
+  </div></div>
   <label style="font-size:11px"><input type="checkbox" id="ttop" style="width:auto"> Add to Today's Three</label>
   <div class="actions"><button class="secondary" id="cancelTask">Cancel</button><button class="primary" style="width:auto" id="saveTask">Save</button></div>
 </form>
@@ -158,9 +233,12 @@ dialog{width:min(92vw,560px);border:0;border-radius:22px;padding:0}.modal{paddin
 
 <script>
 const $=id=>document.getElementById(id);
-const K={tasks:'steward.tasks.v1',journal:'steward.journal.v1',gratitude:'steward.gratitude.v1',intention:'steward.intention.v1',intentions:'steward.intentions.v1',reflection:'steward.reflection.v1'};
+const K={tasks:'steward.tasks.v1',journal:'steward.journal.v1',gratitude:'steward.gratitude.v1',intention:'steward.intention.v1',intentions:'steward.intentions.v1',reflection:'steward.reflection.v1',reflections:'steward.reflections.v1',theme:'steward.theme.v1'};
 const iso=()=>{const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`};
-const fmt=d=>d.replaceAll('-','/');
+const fmt=d=>d?d.replaceAll('-','/'):'';
+const parseDisplayDate=s=>{const m=String(s||'').trim().match(/^(\d{4})\/(\d{2})\/(\d{2})$/);if(!m)return '';const v=`${m[1]}-${m[2]}-${m[3]}`,dt=new Date(v+'T00:00:00');return Number.isNaN(dt.getTime())?'':v};
+const normalizeDateText=(input,native)=>{const v=parseDisplayDate(input.value);if(v){native.value=v;input.value=fmt(v)}return v};
+const bindDateControl=(text,native,onChange)=>{text.addEventListener('input',()=>{let d=text.value.replace(/\D/g,'').slice(0,8);if(d.length>4)d=d.slice(0,4)+'/'+d.slice(4);if(d.length>7)d=d.slice(0,7)+'/'+d.slice(7);text.value=d});text.addEventListener('change',()=>{const v=normalizeDateText(text,native);if(v&&onChange)onChange(v)});native.addEventListener('change',()=>{if(native.value){text.value=fmt(native.value);if(onChange)onChange(native.value)}})};
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
 const DAILY_VERSES=[
@@ -213,10 +291,15 @@ let tasks=JSON.parse(localStorage.getItem(K.tasks)||'null')||[
 let journals=JSON.parse(localStorage.getItem(K.journal)||'{}');
 let gratitude=JSON.parse(localStorage.getItem(K.gratitude)||'[]');
 let intentions=JSON.parse(localStorage.getItem(K.intentions)||'{}');
+let reflections=JSON.parse(localStorage.getItem(K.reflections)||'{}');
 
 const dlg=$('dlg'),taskList=$('taskList'),allTasks=$('allTasks'),topThree=$('topThree'),summary=$('summary'),bar=$('bar'),pct=$('pct'),
-intention=$('intention'),reflection=$('reflection'),jdate=$('jdate'),jdisplay=$('jdisplay'),jtext=$('jtext'),jhistory=$('jhistory'),
-glist=$('glist'),ginput=$('ginput'),intentionDisplayDate=$('intentionDisplayDate'),intentionArchive=$('intentionArchive'),intentionArchiveList=$('intentionArchiveList'),intentionSearchDate=$('intentionSearchDate'),intentionSearchKeyword=$('intentionSearchKeyword');
+intention=$('intention'),reflection=$('reflection'),jdisplay=$('jdisplay'),jtext=$('jtext'),
+ginput=$('ginput'),intentionDisplayDate=$('intentionDisplayDate'),intentionArchive=$('intentionArchive'),intentionArchiveList=$('intentionArchiveList'),intentionSearchKeyword=$('intentionSearchKeyword'),
+intentionSearchDateText=$('intentionSearchDateText'),intentionSearchDateNative=$('intentionSearchDateNative'),
+jdateText=$('jdateText'),jdateNative=$('jdateNative'),journalArchive=$('journalArchive'),journalArchiveList=$('journalArchiveList'),journalSearchDateText=$('journalSearchDateText'),journalSearchDateNative=$('journalSearchDateNative'),journalSearchKeyword=$('journalSearchKeyword'),
+reflectionDisplayDate=$('reflectionDisplayDate'),reflectionArchive=$('reflectionArchive'),reflectionArchiveList=$('reflectionArchiveList'),reflectionSearchDateText=$('reflectionSearchDateText'),reflectionSearchDateNative=$('reflectionSearchDateNative'),reflectionSearchKeyword=$('reflectionSearchKeyword'),
+tdueText=$('tdueText'),tdueNative=$('tdueNative');
 
 function persist(){localStorage.setItem(K.tasks,JSON.stringify(tasks))}
 function taskHtml(t){return `<div class="task ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask(${t.id},this.checked)"><div class="taskbody"><div class="name">${esc(t.name)}</div><div class="meta">${esc(t.category)} · ${esc(t.priority)} priority${t.due?' · '+fmt(t.due):''}</div></div><button class="del" onclick="deleteTask(${t.id})">×</button></div>`}
@@ -263,7 +346,7 @@ function loadTodayIntention(){
   intentionStatus.textContent='';
 }
 function renderIntentionArchive(){
-  const dateFilter=intentionSearchDate.value;
+  const dateFilter=parseDisplayDate(intentionSearchDateText.value);
   const keyword=intentionSearchKeyword.value.trim().toLowerCase();
   const keys=Object.keys(intentions).sort().reverse().filter(k=>{
     const matchesDate=!dateFilter||k===dateFilter;
@@ -294,32 +377,140 @@ $('toggleIntentions').onclick=()=>{
   $('toggleIntentions').textContent=open?'Hide Saved Intentions':'View Saved Intentions';
   if(open)renderIntentionArchive();
 };
-intentionSearchDate.oninput=renderIntentionArchive;
+intentionSearchDateText.oninput=renderIntentionArchive;
 intentionSearchKeyword.oninput=renderIntentionArchive;
 
-reflection.value=localStorage.getItem(K.reflection)||'';
-reflection.oninput=()=>localStorage.setItem(K.reflection,reflection.value);
-
-function loadJ(d){jdate.value=d;jdisplay.textContent=fmt(d);jtext.value=journals[d]?.content||''}
-window.loadJ=loadJ;
-function renderJ(){const ks=Object.keys(journals).sort().reverse().slice(0,12);jhistory.innerHTML=ks.map(k=>`<button onclick="loadJ('${k}')"><strong>${fmt(k)}</strong><small>${esc((journals[k].content||'').slice(0,70))}</small></button>`).join('')}
-loadJ(iso());renderJ();
-jdate.onchange=()=>loadJ(jdate.value);
-$('saveJournal').onclick=()=>{
-  if(!jdate.value)return;
-  journals[jdate.value]={displayDate:fmt(jdate.value),content:jtext.value,updatedAt:new Date().toISOString()};
-  localStorage.setItem(K.journal,JSON.stringify(journals));renderJ();
+function migrateLegacyReflection(){
+  const legacy=localStorage.getItem(K.reflection);
+  const today=iso();
+  if(legacy&&legacy.trim()&&!reflections[today]){
+    reflections[today]={displayDate:fmt(today),content:legacy,updatedAt:new Date().toISOString(),migratedFromLegacy:true};
+    localStorage.setItem(K.reflections,JSON.stringify(reflections));
+  }
+}
+function loadTodayReflection(){
+  const today=iso();
+  reflectionDisplayDate.textContent=fmt(today);
+  reflection.value=reflections[today]?.content||'';
+}
+const reflectionStatus=$('reflectionStatus');
+migrateLegacyReflection();
+loadTodayReflection();
+reflection.oninput=()=>{reflectionStatus.textContent='Unsaved changes';};
+$('saveReflection').onclick=()=>{
+  const today=iso();
+  reflections[today]={displayDate:fmt(today),content:reflection.value,updatedAt:new Date().toISOString()};
+  localStorage.setItem(K.reflections,JSON.stringify(reflections));
+  localStorage.setItem(K.reflection,reflection.value);
+  reflectionStatus.textContent='Saved';
+  renderReflectionArchive();
+  setTimeout(()=>reflectionStatus.textContent='',2200);
 };
 
-function renderG(){glist.innerHTML=gratitude.map(g=>`<button><strong>${esc(g.date)}</strong><small>${esc(g.text)}</small></button>`).join('')}
-renderG();
+function loadJ(d){
+  jdateNative.value=d;jdateText.value=fmt(d);jdisplay.textContent=fmt(d);jtext.value=journals[d]?.content||'';
+}
+window.loadJ=loadJ;
+function renderJournalArchive(){
+  const dateFilter=parseDisplayDate(journalSearchDateText.value);
+  const keyword=journalSearchKeyword.value.trim().toLowerCase();
+  const keys=Object.keys(journals).sort().reverse().filter(k=>{
+    const text=(journals[k]?.content||'').toLowerCase();
+    return (!dateFilter||k===dateFilter)&&(!keyword||text.includes(keyword));
+  });
+  journalArchiveList.innerHTML=keys.length?keys.map(k=>`<button class="archive-entry" type="button" onclick="loadJ('${k}')" style="width:100%;text-align:left"><strong>${fmt(k)}</strong><p>${esc(journals[k]?.content||'')}</p></button>`).join(''):'<div class="archive-empty">No journal entries match this search.</div>';
+}
+loadJ(iso());renderJournalArchive();
+$('saveJournal').onclick=()=>{
+  const d=parseDisplayDate(jdateText.value);
+  if(!d){alert('Please enter the date as YYYY/MM/DD.');return;}
+  journals[d]={displayDate:fmt(d),content:jtext.value,updatedAt:new Date().toISOString()};
+  localStorage.setItem(K.journal,JSON.stringify(journals));renderJournalArchive();
+};
+$('toggleJournalArchive').onclick=()=>{
+  const open=journalArchive.classList.toggle('open');
+  $('toggleJournalArchive').textContent=open?'Hide Journal Archive':'View Journal Archive';
+  if(open)renderJournalArchive();
+};
+journalSearchDateText.oninput=renderJournalArchive;
+journalSearchKeyword.oninput=renderJournalArchive;
+
+function gratitudeIso(g){return g.isoDate||String(g.date||'').replaceAll('/','-')}
+function renderReflectionArchive(){
+  const dateFilter=parseDisplayDate(reflectionSearchDateText.value);
+  const keyword=reflectionSearchKeyword.value.trim().toLowerCase();
+  const dates=new Set([...Object.keys(reflections),...gratitude.map(gratitudeIso).filter(Boolean)]);
+  const rows=[...dates].sort().reverse().map(d=>{
+    const r=reflections[d]?.content||'';
+    const gs=gratitude.filter(g=>gratitudeIso(g)===d).map(g=>g.text);
+    const combined=(r+' '+gs.join(' ')).toLowerCase();
+    if((dateFilter&&d!==dateFilter)||(keyword&&!combined.includes(keyword)))return '';
+    let body='';
+    if(r)body+=`<span class="archive-label">Prayer & Reflection</span><p>${esc(r)}</p>`;
+    if(gs.length)body+=`<span class="archive-label">Gratitude</span>${gs.map(x=>`<p>${esc(x)}</p>`).join('')}`;
+    return `<div class="archive-entry"><strong>${fmt(d)}</strong>${body}</div>`;
+  }).filter(Boolean);
+  reflectionArchiveList.innerHTML=rows.length?rows.join(''):'<div class="archive-empty">No reflection or gratitude records match this search.</div>';
+}
 $('saveG').onclick=()=>{
   const v=ginput.value.trim();if(!v)return;
-  gratitude.unshift({date:fmt(iso()),text:v});localStorage.setItem(K.gratitude,JSON.stringify(gratitude));ginput.value='';renderG();
+  const d=iso();
+  gratitude.unshift({date:fmt(d),isoDate:d,text:v,updatedAt:new Date().toISOString()});
+  localStorage.setItem(K.gratitude,JSON.stringify(gratitude));ginput.value='';renderReflectionArchive();
 };
+$('toggleReflectionArchive').onclick=()=>{
+  const open=reflectionArchive.classList.toggle('open');
+  $('toggleReflectionArchive').textContent=open?'Hide Reflection Archive':'View Reflection Archive';
+  if(open)renderReflectionArchive();
+};
+reflectionSearchDateText.oninput=renderReflectionArchive;
+reflectionSearchKeyword.oninput=renderReflectionArchive;
+renderReflectionArchive();
+
+/* Date UI: every visible date is YYYY/MM/DD while storage remains YYYY-MM-DD. */
+bindDateControl(intentionSearchDateText,intentionSearchDateNative,renderIntentionArchive);
+bindDateControl(jdateText,jdateNative,loadJ);
+bindDateControl(journalSearchDateText,journalSearchDateNative,renderJournalArchive);
+bindDateControl(reflectionSearchDateText,reflectionSearchDateNative,renderReflectionArchive);
+bindDateControl(tdueText,tdueNative);
+document.querySelectorAll('[data-date-target]').forEach(btn=>btn.onclick=()=>{
+  const picker=$(btn.dataset.dateTarget);
+  if(picker.showPicker)picker.showPicker();else picker.click();
+});
+
+/* Appearance */
+const THEME_PRESETS={
+  purple:{name:'Royal Purple',base:'#6f4589'},
+  blue:{name:'Calm Blue',base:'#3f6fa6'}
+};
+function hexRgb(hex){const h=hex.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]}
+function mix(hex,target,amount){const a=hexRgb(hex),b=hexRgb(target),c=a.map((v,i)=>Math.round(v+(b[i]-v)*amount));return '#'+c.map(v=>v.toString(16).padStart(2,'0')).join('')}
+function applyTheme(base,name='Custom'){
+  base=base.toLowerCase();
+  const root=document.documentElement;
+  root.style.setProperty('--mid',base);
+  root.style.setProperty('--lav',mix(base,'#ffffff',.30));
+  root.style.setProperty('--soft',mix(base,'#ffffff',.88));
+  root.style.setProperty('--deep2',mix(base,'#000000',.38));
+  root.style.setProperty('--deep',mix(base,'#000000',.58));
+  root.style.setProperty('--line',mix(base,'#ffffff',.78));
+  document.querySelector('meta[name="theme-color"]').setAttribute('content',mix(base,'#000000',.38));
+  $('themeColor').value=base;$('themeHex').textContent=base.toUpperCase();
+  const rgb=hexRgb(base);$('themeRgb').textContent=`RGB ${rgb.join(', ')}`;
+  $('themePurple').classList.toggle('active',name==='Royal Purple');
+  $('themeBlue').classList.toggle('active',name==='Calm Blue');
+}
+function saveTheme(name,base){const t={name,base};localStorage.setItem(K.theme,JSON.stringify(t));applyTheme(base,name)}
+const savedTheme=JSON.parse(localStorage.getItem(K.theme)||'null')||THEME_PRESETS.purple;
+applyTheme(savedTheme.base,savedTheme.name);
+$('themePurple').onclick=()=>saveTheme(THEME_PRESETS.purple.name,THEME_PRESETS.purple.base);
+$('themeBlue').onclick=()=>saveTheme(THEME_PRESETS.blue.name,THEME_PRESETS.blue.base);
+$('themeColor').oninput=()=>{const h=$('themeColor').value;$('themeHex').textContent=h.toUpperCase();$('themeRgb').textContent=`RGB ${hexRgb(h).join(', ')}`};
+$('applyCustomTheme').onclick=()=>saveTheme('Custom',$('themeColor').value);
+$('resetTheme').onclick=()=>saveTheme(THEME_PRESETS.purple.name,THEME_PRESETS.purple.base);
 
 $('exportBtn').onclick=()=>{
-  const d={version:'1.2.0',exportedAt:new Date().toISOString(),tasks,journals,gratitude,intention:intention.value,intentions,reflection:reflection.value};
+  const d={version:'1.3.0',exportedAt:new Date().toISOString(),tasks,journals,gratitude,intention:intention.value,intentions,reflection:reflection.value,reflections,theme:JSON.parse(localStorage.getItem(K.theme)||'null')};
   const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=u;a.download='STEWARD-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),500);
 };
@@ -338,6 +529,13 @@ $('importFile').onchange=async e=>{
       localStorage.setItem(K.intentions,JSON.stringify(migrated));
     }
     if(typeof d.reflection==='string')localStorage.setItem(K.reflection,d.reflection);
+    if(d.reflections&&typeof d.reflections==='object')localStorage.setItem(K.reflections,JSON.stringify(d.reflections));
+    else if(typeof d.reflection==='string'){
+      const importDate=iso(),migratedReflection={};
+      migratedReflection[importDate]={displayDate:fmt(importDate),content:d.reflection,updatedAt:new Date().toISOString(),migratedFromLegacy:true};
+      localStorage.setItem(K.reflections,JSON.stringify(migratedReflection));
+    }
+    if(d.theme&&d.theme.base)localStorage.setItem(K.theme,JSON.stringify(d.theme));
     location.reload();
   }catch(err){alert('Invalid backup file.')}
 };
