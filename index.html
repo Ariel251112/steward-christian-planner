@@ -17,7 +17,7 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background
 .install{border:1px solid #ffffff33;background:#ffffff15;color:#fff;border-radius:10px;padding:8px 10px;font-weight:800;font-size:11px}
 .wrap{max-width:760px;margin:auto;padding:16px}.view{display:none}.view.active{display:block}
 .hero{position:relative;overflow:hidden;background:linear-gradient(120deg,var(--deep),#72478b);color:#fff;border-radius:22px;padding:22px 20px;margin-bottom:14px}
-.hero q{display:block;font-family:Georgia,serif;font-size:20px;line-height:1.45;margin:8px 0}.verse-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.verse-source{font-size:9px;border:1px solid #ffffff35;border-radius:999px;padding:3px 7px;color:#e6dced}.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:#d9c9e4;font-weight:800}.ref{font-size:11px;color:#d9c9e4}
+.hero q{display:block;font-family:Georgia,serif;font-size:20px;line-height:1.45;margin:8px 0}.verse-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:#d9c9e4;font-weight:800}.ref{font-size:11px;color:#d9c9e4}
 .bf{position:absolute;right:18px;top:12px;font-size:29px;opacity:.22;animation:f 5s ease-in-out infinite}.bf.b2{right:80px;top:auto;bottom:12px;font-size:18px;opacity:.13}@keyframes f{50%{transform:translateY(-7px)}}
 .card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:17px;margin-bottom:14px;box-shadow:0 8px 22px #44215b0d}
 .title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.title h2{font-size:16px;color:var(--deep);margin:0}.title span{font-size:10px;color:var(--muted)}
@@ -30,6 +30,18 @@ textarea,input,select{width:100%;border:1px solid var(--line);border-radius:12px
 .history button{width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:11px;padding:9px;margin-top:7px}.history strong{color:var(--deep)}.history small{display:block;color:var(--muted);margin-top:2px}
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid var(--line);padding:7px 6px}.nav button{border:0;background:transparent;color:#8a7b90;font-size:9px}.nav span{display:block;font-size:18px}.nav .active{color:var(--mid);font-weight:900}
 dialog{width:min(92vw,560px);border:0;border-radius:22px;padding:0}.modal{padding:18px}.modal h3{color:var(--deep)}.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:11px}
+
+.archive-toggle{margin-top:10px;width:100%}
+.archive-panel{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.archive-panel.open{display:block}
+.archive-tools{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
+.archive-list{display:grid;gap:8px}
+.archive-entry{border:1px solid var(--line);border-radius:13px;background:#fcfafd;padding:11px}
+.archive-entry strong{display:block;color:var(--deep);font-size:12px;margin-bottom:5px}
+.archive-entry p{margin:0;color:var(--text);font-size:12px;line-height:1.5;white-space:pre-wrap}
+.archive-empty{font-size:11px;color:var(--muted);padding:8px 0}
+@media(max-width:520px){.archive-tools{grid-template-columns:1fr}}
+
 @media(min-width:700px){.three{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
@@ -44,7 +56,7 @@ dialog{width:min(92vw,560px);border:0;border-radius:22px;padding:0}.modal{paddin
   <div class="hero">
     <div class="eyebrow">Verse for today</div>
     <q id="verseText"></q>
-    <div class="verse-meta"><div class="ref" id="verseRef"></div><div class="verse-source">WEB · Public Domain</div></div>
+    <div class="verse-meta"><div class="ref" id="verseRef"></div></div>
     <div class="bf">🦋</div><div class="bf b2">🦋</div>
   </div>
 
@@ -63,8 +75,18 @@ dialog{width:min(92vw,560px);border:0;border-radius:22px;padding:0}.modal{paddin
   <div class="card">
     <div class="title"><div><h2>Morning Intention</h2><span>Pause before you rush.</span></div></div>
     <p class="prompt">What am I called to steward well today?</p>
+    <div class="date" id="intentionDisplayDate"></div>
     <textarea id="intention" placeholder="Write your intention for today..."></textarea>
     <div class="save-row"><button class="primary" id="saveIntention">Save Intention</button><span class="saved-status" id="intentionStatus"></span></div>
+    <button class="secondary archive-toggle" id="toggleIntentions">View Saved Intentions</button>
+    <div class="archive-panel" id="intentionArchive">
+      <div class="title"><div><h2>Saved Intentions</h2><span>Search your past intentions</span></div></div>
+      <div class="archive-tools">
+        <div class="field"><label>Date</label><input type="date" id="intentionSearchDate"></div>
+        <div class="field"><label>Keyword</label><input id="intentionSearchKeyword" placeholder="e.g. patience, team, rest"></div>
+      </div>
+      <div class="archive-list" id="intentionArchiveList"></div>
+    </div>
   </div>
 </section>
 
@@ -136,7 +158,7 @@ dialog{width:min(92vw,560px);border:0;border-radius:22px;padding:0}.modal{paddin
 
 <script>
 const $=id=>document.getElementById(id);
-const K={tasks:'steward.tasks.v1',journal:'steward.journal.v1',gratitude:'steward.gratitude.v1',intention:'steward.intention.v1',reflection:'steward.reflection.v1'};
+const K={tasks:'steward.tasks.v1',journal:'steward.journal.v1',gratitude:'steward.gratitude.v1',intention:'steward.intention.v1',intentions:'steward.intentions.v1',reflection:'steward.reflection.v1'};
 const iso=()=>{const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`};
 const fmt=d=>d.replaceAll('-','/');
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
@@ -179,7 +201,7 @@ function renderDailyVerse(){
   const [y,m,d]=today.split('-').map(Number);
   const dayNumber=Math.floor(Date.UTC(y,m-1,d)/86400000);
   const verse=DAILY_VERSES[Math.abs(dayNumber)%DAILY_VERSES.length];
-  $('verseText').textContent='“'+verse.text+'”';
+  $('verseText').textContent=verse.text;
   $('verseRef').textContent=verse.ref;
 }
 
@@ -190,10 +212,11 @@ let tasks=JSON.parse(localStorage.getItem(K.tasks)||'null')||[
 ];
 let journals=JSON.parse(localStorage.getItem(K.journal)||'{}');
 let gratitude=JSON.parse(localStorage.getItem(K.gratitude)||'[]');
+let intentions=JSON.parse(localStorage.getItem(K.intentions)||'{}');
 
 const dlg=$('dlg'),taskList=$('taskList'),allTasks=$('allTasks'),topThree=$('topThree'),summary=$('summary'),bar=$('bar'),pct=$('pct'),
 intention=$('intention'),reflection=$('reflection'),jdate=$('jdate'),jdisplay=$('jdisplay'),jtext=$('jtext'),jhistory=$('jhistory'),
-glist=$('glist'),ginput=$('ginput');
+glist=$('glist'),ginput=$('ginput'),intentionDisplayDate=$('intentionDisplayDate'),intentionArchive=$('intentionArchive'),intentionArchiveList=$('intentionArchiveList'),intentionSearchDate=$('intentionSearchDate'),intentionSearchKeyword=$('intentionSearchKeyword');
 
 function persist(){localStorage.setItem(K.tasks,JSON.stringify(tasks))}
 function taskHtml(t){return `<div class="task ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask(${t.id},this.checked)"><div class="taskbody"><div class="name">${esc(t.name)}</div><div class="meta">${esc(t.category)} · ${esc(t.priority)} priority${t.due?' · '+fmt(t.due):''}</div></div><button class="del" onclick="deleteTask(${t.id})">×</button></div>`}
@@ -223,14 +246,57 @@ document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$(b.dataset.view).classList.add('active');
 });
 
-intention.value=localStorage.getItem(K.intention)||'';
 const intentionStatus=$('intentionStatus');
+
+function migrateLegacyIntention(){
+  const legacy=localStorage.getItem(K.intention);
+  const today=iso();
+  if(legacy && legacy.trim() && !intentions[today]){
+    intentions[today]={displayDate:fmt(today),content:legacy,updatedAt:new Date().toISOString(),migratedFromLegacy:true};
+    localStorage.setItem(K.intentions,JSON.stringify(intentions));
+  }
+}
+function loadTodayIntention(){
+  const today=iso();
+  intentionDisplayDate.textContent=fmt(today);
+  intention.value=intentions[today]?.content||'';
+  intentionStatus.textContent='';
+}
+function renderIntentionArchive(){
+  const dateFilter=intentionSearchDate.value;
+  const keyword=intentionSearchKeyword.value.trim().toLowerCase();
+  const keys=Object.keys(intentions).sort().reverse().filter(k=>{
+    const matchesDate=!dateFilter||k===dateFilter;
+    const text=(intentions[k]?.content||'').toLowerCase();
+    const matchesKeyword=!keyword||text.includes(keyword);
+    return matchesDate&&matchesKeyword;
+  });
+  intentionArchiveList.innerHTML=keys.length
+    ? keys.map(k=>`<div class="archive-entry"><strong>${fmt(k)}</strong><p>${esc(intentions[k]?.content||'')}</p></div>`).join('')
+    : '<div class="archive-empty">No saved intentions match this search.</div>';
+}
+migrateLegacyIntention();
+loadTodayIntention();
+renderIntentionArchive();
+
 $('saveIntention').onclick=()=>{
+  const today=iso();
+  intentions[today]={displayDate:fmt(today),content:intention.value,updatedAt:new Date().toISOString()};
+  localStorage.setItem(K.intentions,JSON.stringify(intentions));
   localStorage.setItem(K.intention,intention.value);
   intentionStatus.textContent='Saved';
+  renderIntentionArchive();
   setTimeout(()=>{intentionStatus.textContent='';},2200);
 };
 intention.oninput=()=>{intentionStatus.textContent='Unsaved changes';};
+$('toggleIntentions').onclick=()=>{
+  const open=intentionArchive.classList.toggle('open');
+  $('toggleIntentions').textContent=open?'Hide Saved Intentions':'View Saved Intentions';
+  if(open)renderIntentionArchive();
+};
+intentionSearchDate.oninput=renderIntentionArchive;
+intentionSearchKeyword.oninput=renderIntentionArchive;
+
 reflection.value=localStorage.getItem(K.reflection)||'';
 reflection.oninput=()=>localStorage.setItem(K.reflection,reflection.value);
 
@@ -253,7 +319,7 @@ $('saveG').onclick=()=>{
 };
 
 $('exportBtn').onclick=()=>{
-  const d={version:'1.1.0',exportedAt:new Date().toISOString(),tasks,journals,gratitude,intention:intention.value,reflection:reflection.value};
+  const d={version:'1.2.0',exportedAt:new Date().toISOString(),tasks,journals,gratitude,intention:intention.value,intentions,reflection:reflection.value};
   const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=u;a.download='STEWARD-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),500);
 };
@@ -265,6 +331,12 @@ $('importFile').onchange=async e=>{
     if(d.journals&&typeof d.journals==='object')localStorage.setItem(K.journal,JSON.stringify(d.journals));
     if(Array.isArray(d.gratitude))localStorage.setItem(K.gratitude,JSON.stringify(d.gratitude));
     if(typeof d.intention==='string')localStorage.setItem(K.intention,d.intention);
+    if(d.intentions&&typeof d.intentions==='object')localStorage.setItem(K.intentions,JSON.stringify(d.intentions));
+    else if(typeof d.intention==='string'){
+      const importDate=iso(),migrated={};
+      migrated[importDate]={displayDate:fmt(importDate),content:d.intention,updatedAt:new Date().toISOString(),migratedFromLegacy:true};
+      localStorage.setItem(K.intentions,JSON.stringify(migrated));
+    }
     if(typeof d.reflection==='string')localStorage.setItem(K.reflection,d.reflection);
     location.reload();
   }catch(err){alert('Invalid backup file.')}

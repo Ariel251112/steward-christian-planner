@@ -1,7 +1,7 @@
 # STEWARD — Christian Daily Planner
 
 ## Project Status
-- **Current version:** v1.1.0 Today Page Update
+- **Current version:** v1.2.0 — Today Page Complete
 - **Primary platform:** Android + Google Chrome
 - **Architecture:** Local-first Progressive Web App (PWA)
 - **Hosting:** GitHub Pages over HTTPS
@@ -11,116 +11,127 @@ STEWARD is a Christian-inspired personal planner for purposeful work, stewardshi
 
 > **Plan with purpose. Work with faith.**
 
-## Visual System
-- Deep purple `#2F153F`
-- Dark purple `#44215B`
-- Primary purple `#6F4589`
-- Lavender `#9D76B7`
-- Soft lavender `#F4EDF8`
-- Warm gold accent for the cross
-- Subtle butterfly elements symbolize transformation, renewal, hope, and new life
-
-## Navigation
-1. Today
-2. Tasks
-3. Journal
-4. Reflect
-5. Settings
-
-## Today Page
+## Today Page — v1.2.0 Baseline
 
 ### Verse for Today
-- No longer fixed to Colossians 3:23.
 - Uses a built-in local library of 31 English Bible verses.
-- Verse text source: **World English Bible (WEB), Public Domain**.
-- The verse is selected deterministically from the local calendar date.
-- The same verse remains stable throughout the same day.
-- A different date selects a different verse automatically.
-- No API, external request, account, or internet connection is required.
-- This preserves offline PWA behavior and local-first architecture.
-- YouVersion integration is not implemented in v1.1.0 and remains a possible future enhancement.
+- Verse text source is World English Bible (WEB), Public Domain.
+- Source/licensing information is documented here, but not displayed in the user-facing Scripture hero.
+- Verse selection is deterministic by the user's local calendar date.
+- The same verse stays stable throughout the same date.
+- A different date automatically selects a different verse.
+- The UI displays only the section label, Scripture text, and Scripture reference.
+- The double quotation issue is fixed: the `<q>` element supplies the quotation marks and JavaScript no longer injects a second pair.
+- YouVersion integration remains a future enhancement.
 
 ### Today's Three
 - Displays up to three incomplete tasks marked for Today's Three.
-- No behavior change in v1.1.0.
+- Purpose: `What matters most today?`
+- No behavior change in v1.2.0.
 
 ### Today's Tasks
-- Displays all current tasks and completion progress.
-- No behavior change in v1.1.0.
+- Displays all current tasks.
+- Shows total task count, completed count, and Daily Stewardship completion percentage.
+- Supports Add, complete, and delete.
+- No behavior change in v1.2.0.
 
 ### Morning Intention
-- User can enter a Morning Intention.
-- Added explicit **Save Intention** button.
-- Save writes to existing localStorage key `steward.intention.v1`.
-- Existing stored intention data remains compatible.
-- UI displays `Unsaved changes` after editing and `Saved` after a successful save.
+- Displays today's date as `YYYY/MM/DD`.
+- User writes today's intention and presses **Save Intention**.
+- Editing displays `Unsaved changes`; successful save displays `Saved`.
+- One intention record is stored per local calendar date.
+- Saving again on the same date updates that date rather than creating a duplicate.
+
+#### Saved Intentions Archive
+- **View Saved Intentions** expands an archive below the current entry.
+- Records are sorted newest-first.
+- Search supports:
+  - exact date
+  - keyword
+  - date + keyword together
+- Archive entries display the saved date and full content.
+
+#### Intention storage
+New dated archive key:
+- `steward.intentions.v1`
+
+Conceptual structure:
+```json
+{
+  "2026-08-29": {
+    "displayDate": "2026/08/29",
+    "content": "Focus on serving well and not rushing.",
+    "updatedAt": "ISO timestamp"
+  }
+}
+```
+
+Legacy compatibility key:
+- `steward.intention.v1`
+
+On first load after upgrading, an existing legacy Morning Intention is migrated into today's dated record if today's archive record does not already exist. The legacy key is preserved for backward compatibility.
 
 ## Current Features
 - Daily rotating Scripture
 - Today's Three
-- Add / complete / delete tasks
-- Task purpose, category, priority, due date
-- Daily completion progress
-- Morning Intention with explicit save
+- Today's Tasks with completion progress
+- Morning Intention with dated archive
+- Intention archive date search
+- Intention archive keyword search
 - Prayer & Reflection
-- Dated Gratitude records
-- Daily Journal with one entry per date
-- Journal user-facing format `YYYY/MM/DD`
-- Journal internal key format `YYYY-MM-DD`
-- Previous journal history
+- Gratitude
+- Daily Journal
 - localStorage persistence
 - JSON backup and restore
 - Android PWA manifest
-- Service worker offline app-shell cache
-- 192px, 512px and maskable application icons
-- Android Chrome install-prompt support
+- Offline app shell
+- Android Chrome install support
 
 ## LocalStorage Keys
 - `steward.tasks.v1`
 - `steward.journal.v1`
 - `steward.gratitude.v1`
 - `steward.intention.v1`
+- `steward.intentions.v1`
 - `steward.reflection.v1`
 
-## Journal Data Structure
-```json
-{
-  "2026-08-29": {
-    "displayDate": "2026/08/29",
-    "content": "Journal content...",
-    "updatedAt": "ISO timestamp"
-  }
-}
-```
+## Backup / Restore
+JSON export now includes:
+- tasks
+- journals
+- gratitude
+- current intention compatibility value
+- full dated `intentions` archive
+- reflection
 
-## PWA Files
-- `index.html`
-- `manifest.json`
-- `service-worker.js`
-- `icons/icon-192.png`
-- `icons/icon-512.png`
-- `icons/maskable-512.png`
+JSON restore:
+- restores the full `intentions` archive when present
+- remains compatible with older backups containing only a single `intention`
 
-## Service Worker
-Current cache: `steward-pwa-v1.1.0`
+## PWA
+Current service worker cache:
+- `steward-pwa-v1.2.0`
 
-Runtime fetch strategy remains network-first with cache fallback. Core assets are pre-cached for offline use.
+Runtime strategy:
+- network-first while online
+- cache fallback while offline
+- core app shell pre-cached
 
 ## Data Safety Rules
 1. Never silently delete saved localStorage data.
 2. Warn before breaking storage migrations.
-3. Keep Journal display date format `YYYY/MM/DD` unless explicitly changed.
-4. JSON backup must include every journal record.
-5. JSON restore must restore every journal record.
-6. Existing storage keys should remain backward-compatible when reasonably possible.
-7. Clearing Chrome site data can erase local content, so regular backup is recommended.
+3. Journal and Intention user-facing dates remain `YYYY/MM/DD`.
+4. JSON backup must include all Journal and Saved Intention records.
+5. JSON restore must restore Journal and Saved Intention records.
+6. Preserve existing storage keys when reasonably possible.
+7. Clearing browser site data can erase local content; regular JSON backups are recommended.
 
 ## Known Limitations
 - No cloud sync or multi-device sync
 - Data remains on the browser/device where it was created
 - Recurring task execution is not yet implemented
 - Daily Scripture uses the local WEB verse library rather than YouVersion
-- Morning Intention currently stores one current intention value rather than a dated history
+- Saved Intentions support date and text search, but not tags/categories
 
 ## Mandatory Documentation Synchronization Rule
 `index.html` and `STEWARD_PROJECT.md` are a synchronized project pair.
@@ -133,41 +144,33 @@ For every meaningful future update:
 5. Update `STEWARD_PROJECT.md` in the same change set.
 6. Verify feature, storage, interaction, cache and version documentation match the implementation.
 
-Do not update only `index.html` when a change affects documented project state.
+Do not update only one when a change affects documented project state.
 
 ## Version History
 
+### v1.2.0 — Today Page Complete
+- Fixed Scripture double quotation rendering
+- Removed user-facing `WEB · Public Domain` badge
+- Preserved date-based daily Scripture rotation
+- Added dated Morning Intention records
+- Added Saved Intentions Archive
+- Added date and keyword archive search
+- Added safe legacy Morning Intention migration
+- Added full intention archive to JSON backup/restore
+- Bumped service worker cache to `steward-pwa-v1.2.0`
+- Established Today page v1.2.0 baseline pending acceptance test
+
 ### v1.1.0 — Today Page Update
-- Replaced fixed Scripture with date-based daily Scripture rotation
-- Added 31-verse local World English Bible library
-- Preserved offline/local-first operation
-- Added explicit Save Intention control
-- Added Morning Intention saved/unsaved status
-- Preserved existing task behavior and localStorage keys
-- Bumped service worker cache to `steward-pwa-v1.1.0`
-- Updated backup version to `1.1.0`
-- Updated synchronized project documentation
+- Added date-based daily Scripture rotation
+- Added local WEB Scripture library
+- Added explicit Save Intention
+- Added saved/unsaved status
 
 ### v1.0.1 — Interaction Hotfix
-- Fixed JavaScript initialization failure after GitHub Pages deployment
+- Fixed JavaScript initialization after GitHub Pages deployment
 - Replaced implicit element globals with explicit DOM lookups
-- Explicitly bound interactive controls
-- Preserved localStorage schema
-- Bumped service worker cache to `steward-pwa-v1.0.1`
-- Switched runtime fetch handling to network-first
-- Updated synchronized project documentation
+- Switched service worker runtime strategy to network-first
 
 ### v1.0.0 — Android PWA Prototype
-- Rebuilt as mobile-first Android Chrome PWA
-- Added manifest and service worker
-- Added offline app shell
-- Added install prompt support
-- Added application icons
-- Added bottom navigation
-- Added Today's Three and task management
-- Added Morning Intention
-- Added Prayer & Reflection
-- Added Gratitude
-- Added dated Daily Journal
-- Added JSON backup and restore
-- Established synchronized Markdown documentation
+- Initial mobile-first PWA
+- Added task management, Journal, Reflection, Gratitude, backup/restore and install support
