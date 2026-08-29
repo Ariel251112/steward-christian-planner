@@ -1,10 +1,10 @@
 # STEWARD — Christian Daily Planner
 
 ## Project Status
-- **Current version:** v1.0.0 Android PWA Prototype
+- **Current version:** v1.0.1 Android PWA Hotfix
 - **Primary platform:** Android + Google Chrome
 - **Architecture:** Local-first Progressive Web App (PWA)
-- **Hosting requirement:** HTTPS in production for installable PWA behavior
+- **Hosting:** GitHub Pages over HTTPS
 
 ## Project Purpose
 STEWARD is a Christian-inspired personal planner for purposeful work, stewardship, prayer, gratitude, reflection, and journaling.
@@ -74,12 +74,21 @@ STEWARD is a Christian-inspired personal planner for purposeful work, stewardshi
 - `icons/maskable-512.png`
 
 ## Service Worker
-Current cache: `steward-pwa-v1.0.0`
+Current cache: `steward-pwa-v1.0.1`
 
-When core PWA assets change, increment the cache version so Android Chrome receives updated files.
+The v1.0.1 service worker changes the runtime fetch strategy to network-first so newly deployed GitHub Pages updates are less likely to be hidden behind an older cached `index.html`.
 
-## HTTPS Deployment
-The complete folder is ready for static HTTPS hosting such as GitHub Pages, Netlify, Cloudflare Pages, or another static host. Relative paths must be preserved.
+## v1.0.1 Hotfix
+This release fixes the first GitHub Pages deployment where the visual UI loaded but JavaScript interactions did not initialize reliably.
+
+Changes:
+- Replaced implicit HTML-ID JavaScript globals with explicit `document.getElementById(...)` references.
+- Renamed ambiguous IDs such as `export`, `import`, and `install` to `exportBtn`, `importFile`, and `installBtn`.
+- Explicitly bound Add Task, navigation, Journal, Reflection, Gratitude, backup, restore, and install event handlers.
+- Preserved all existing localStorage keys to avoid data loss.
+- Updated the service worker cache from `steward-pwa-v1.0.0` to `steward-pwa-v1.0.1`.
+- Updated runtime cache behavior to prefer the latest network response when online.
+- Backup export version updated to `1.0.1`.
 
 ## Data Safety Rules
 1. Never silently delete saved localStorage data.
@@ -87,13 +96,14 @@ The complete folder is ready for static HTTPS hosting such as GitHub Pages, Netl
 3. Keep Journal display date format `YYYY/MM/DD` unless explicitly changed.
 4. JSON backup must include every journal record.
 5. JSON restore must restore every journal record.
-6. Clearing Chrome site data can erase local content, so regular backup is recommended.
+6. Existing storage keys should remain backward-compatible when reasonably possible.
+7. Clearing Chrome site data can erase local content, so regular backup is recommended.
 
 ## Known Limitations
 - No cloud sync or multi-device sync
 - Data remains on the browser/device where it was created
 - Recurring task execution is not yet implemented
-- Daily Scripture is static in v1.0.0
+- Daily Scripture is static in v1.0.1
 
 ## Mandatory Documentation Synchronization Rule
 `index.html` and `STEWARD_PROJECT.md` are a synchronized project pair.
@@ -106,9 +116,19 @@ For every meaningful future update:
 5. Update `STEWARD_PROJECT.md` in the same change set.
 6. Verify feature, storage, interaction, cache and version documentation match the implementation.
 
-Do not update only `index.html` when the change affects documented project state.
+Do not update only `index.html` when a change affects documented project state.
 
 ## Version History
+
+### v1.0.1 — Interaction Hotfix
+- Fixed JavaScript initialization failure after GitHub Pages deployment
+- Replaced implicit element globals with explicit DOM lookups
+- Explicitly bound interactive controls
+- Preserved localStorage schema
+- Bumped service worker cache to `steward-pwa-v1.0.1`
+- Switched runtime fetch handling to network-first
+- Updated synchronized project documentation
+
 ### v1.0.0 — Android PWA Prototype
 - Rebuilt as mobile-first Android Chrome PWA
 - Added manifest and service worker
