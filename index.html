@@ -61,6 +61,12 @@ input[type="color"]{height:48px;padding:4px}
 .rgb-values{font-size:10px;color:var(--muted);margin-top:6px}
 .settings-note{font-size:11px;color:var(--muted)}
 
+
+.theme-preset-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:10px 0}
+.theme-preset .theme-sub{display:block;font-size:9px;font-weight:600;color:var(--muted);margin-top:3px}
+.theme-icon{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;margin-right:7px;border:1px solid #00000018;font-size:13px;vertical-align:-6px}
+@media(min-width:700px){.theme-preset-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
 @media(min-width:700px){.three{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
@@ -180,9 +186,14 @@ input[type="color"]{height:48px;padding:4px}
   <div class="card">
     <div class="title"><div><h2>Appearance</h2><span>Make STEWARD feel like your own</span></div></div>
     <p class="settings-note">Choose a theme for this device. Your planner content stays unchanged.</p>
-    <div class="theme-presets">
-      <button class="theme-preset" id="themePurple" type="button"><span class="swatch" style="background:#6f4589"></span>Royal Purple</button>
-      <button class="theme-preset" id="themeBlue" type="button"><span class="swatch" style="background:#3f6fa6"></span>Calm Blue</button>
+    <div class="theme-preset-grid">
+      <button class="theme-preset" id="themePurple" type="button"><span class="theme-icon" style="background:#6f4589;color:white">✦</span>Royal Purple<span class="theme-sub">STEWARD classic</span></button>
+      <button class="theme-preset" id="themeBlue" type="button"><span class="theme-icon" style="background:#3f6fa6;color:white">❄</span>Calm Blue<span class="theme-sub">Quiet & clear</span></button>
+      <button class="theme-preset" id="themeHobbiton" type="button"><span class="theme-icon" style="background:#557a32;color:white">❧</span>Hobbiton<span class="theme-sub">Warm green & parchment</span></button>
+      <button class="theme-preset" id="themeRivendell" type="button"><span class="theme-icon" style="background:#4c7796;color:white">◇</span>Rivendell<span class="theme-sub">Silver blue & calm</span></button>
+      <button class="theme-preset" id="themeLothlorien" type="button"><span class="theme-icon" style="background:#6d7128;color:#fff7cf">✧</span>Lothlórien<span class="theme-sub">Golden green & light</span></button>
+      <button class="theme-preset" id="themeRohan" type="button"><span class="theme-icon" style="background:#7b5628;color:#fff1c8">♞</span>Rohan<span class="theme-sub">Leather, wheat & gold</span></button>
+      <button class="theme-preset" id="themeGondor" type="button"><span class="theme-icon" style="background:#344454;color:white">♜</span>Gondor<span class="theme-sub">Stone, steel & ivory</span></button>
     </div>
     <div class="custom-theme">
       <div class="field"><label>Custom RGB Color</label>
@@ -480,37 +491,34 @@ document.querySelectorAll('[data-date-target]').forEach(btn=>btn.onclick=()=>{
 
 /* Appearance */
 const THEME_PRESETS={
-  purple:{name:'Royal Purple',base:'#6f4589'},
-  blue:{name:'Calm Blue',base:'#3f6fa6'}
+purple:{id:'purple',name:'Royal Purple',base:'#6f4589',deep:'#2f153f',deep2:'#44215b',mid:'#6f4589',lav:'#9d76b7',soft:'#f4edf8',panel:'#ffffff',panel2:'#fcfafd',text:'#2f2834',muted:'#7b7081',line:'#e8deee',gold:'#d8ba75',page:'#f8f4fb',hero2:'#72478b'},
+blue:{id:'blue',name:'Calm Blue',base:'#3f6fa6',deep:'#18324d',deep2:'#274e73',mid:'#3f6fa6',lav:'#86a8ca',soft:'#edf4fb',panel:'#ffffff',panel2:'#f8fbfe',text:'#24313e',muted:'#6e7d8a',line:'#dae6f0',gold:'#d7c48a',page:'#f4f8fc',hero2:'#5d87ad'},
+hobbiton:{id:'hobbiton',name:'Hobbiton',base:'#557a32',deep:'#283718',deep2:'#3e5724',mid:'#557a32',lav:'#8ea66f',soft:'#f3efdf',panel:'#fffaf0',panel2:'#fbf5e7',text:'#332d20',muted:'#786d58',line:'#ded4b9',gold:'#b18a42',page:'#f3eedf',hero2:'#7a6131'},
+rivendell:{id:'rivendell',name:'Rivendell',base:'#4c7796',deep:'#1e394d',deep2:'#31586f',mid:'#4c7796',lav:'#9bb6c9',soft:'#edf3f5',panel:'#fbfdfe',panel2:'#f3f8fa',text:'#243642',muted:'#728591',line:'#d4e0e6',gold:'#c6b887',page:'#eef4f7',hero2:'#6d94ad'},
+lothlorien:{id:'lothlorien',name:'Lothlórien',base:'#6d7128',deep:'#303511',deep2:'#4b4e18',mid:'#6d7128',lav:'#aaa663',soft:'#f4f0d8',panel:'#fffbed',panel2:'#faf6e2',text:'#34331f',muted:'#787458',line:'#dfd7ad',gold:'#c8a94e',page:'#f3f0dc',hero2:'#8a742b'},
+rohan:{id:'rohan',name:'Rohan',base:'#7b5628',deep:'#382514',deep2:'#563919',mid:'#7b5628',lav:'#b18a55',soft:'#f3ead8',panel:'#fff9ed',panel2:'#faf1e2',text:'#392d20',muted:'#7d6c58',line:'#dfceb4',gold:'#c49a4b',page:'#f3ebdd',hero2:'#8d6c32'},
+gondor:{id:'gondor',name:'Gondor',base:'#344454',deep:'#172029',deep2:'#26333f',mid:'#344454',lav:'#7a8998',soft:'#eef0f2',panel:'#fbfbfa',panel2:'#f5f6f7',text:'#252b30',muted:'#707982',line:'#d9dde1',gold:'#b9a56e',page:'#eef0f2',hero2:'#566675'}
 };
 function hexRgb(hex){const h=hex.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]}
 function mix(hex,target,amount){const a=hexRgb(hex),b=hexRgb(target),c=a.map((v,i)=>Math.round(v+(b[i]-v)*amount));return '#'+c.map(v=>v.toString(16).padStart(2,'0')).join('')}
-function applyTheme(base,name='Custom'){
-  base=base.toLowerCase();
-  const root=document.documentElement;
-  root.style.setProperty('--mid',base);
-  root.style.setProperty('--lav',mix(base,'#ffffff',.30));
-  root.style.setProperty('--soft',mix(base,'#ffffff',.88));
-  root.style.setProperty('--deep2',mix(base,'#000000',.38));
-  root.style.setProperty('--deep',mix(base,'#000000',.58));
-  root.style.setProperty('--line',mix(base,'#ffffff',.78));
-  document.querySelector('meta[name="theme-color"]').setAttribute('content',mix(base,'#000000',.38));
-  $('themeColor').value=base;$('themeHex').textContent=base.toUpperCase();
-  const rgb=hexRgb(base);$('themeRgb').textContent=`RGB ${rgb.join(', ')}`;
-  $('themePurple').classList.toggle('active',name==='Royal Purple');
-  $('themeBlue').classList.toggle('active',name==='Calm Blue');
-}
-function saveTheme(name,base){const t={name,base};localStorage.setItem(K.theme,JSON.stringify(t));applyTheme(base,name)}
-const savedTheme=JSON.parse(localStorage.getItem(K.theme)||'null')||THEME_PRESETS.purple;
-applyTheme(savedTheme.base,savedTheme.name);
-$('themePurple').onclick=()=>saveTheme(THEME_PRESETS.purple.name,THEME_PRESETS.purple.base);
-$('themeBlue').onclick=()=>saveTheme(THEME_PRESETS.blue.name,THEME_PRESETS.blue.base);
+function customPalette(base){return{id:'custom',name:'Custom',base,deep:mix(base,'#000000',.58),deep2:mix(base,'#000000',.38),mid:base,lav:mix(base,'#ffffff',.30),soft:mix(base,'#ffffff',.88),panel:'#ffffff',panel2:mix(base,'#ffffff',.95),text:'#2f2834',muted:'#7b7081',line:mix(base,'#ffffff',.78),gold:'#d8ba75',page:mix(base,'#ffffff',.93),hero2:mix(base,'#ffffff',.10)}}
+function applyTheme(t){const p=t.id==='custom'?customPalette(t.base):t;const root=document.documentElement;['deep','deep2','mid','lav','soft','panel','panel2','text','muted','line','gold','page','hero2'].forEach(k=>root.style.setProperty('--'+k,p[k]));document.body.dataset.theme=p.id;document.querySelector('meta[name="theme-color"]').setAttribute('content',p.deep2);$('themeColor').value=p.base;$('themeHex').textContent=p.base.toUpperCase();$('themeRgb').textContent=`RGB ${hexRgb(p.base).join(', ')}`;const map={themePurple:'purple',themeBlue:'blue',themeHobbiton:'hobbiton',themeRivendell:'rivendell',themeLothlorien:'lothlorien',themeRohan:'rohan',themeGondor:'gondor'};Object.entries(map).forEach(([id,key])=>$(id).classList.toggle('active',p.id===key))}
+function saveTheme(t){localStorage.setItem(K.theme,JSON.stringify({id:t.id,name:t.name,base:t.base}));applyTheme(t)}
+function resolveSavedTheme(){const s=JSON.parse(localStorage.getItem(K.theme)||'null');if(!s)return THEME_PRESETS.purple;if(s.id&&THEME_PRESETS[s.id])return THEME_PRESETS[s.id];if(s.base)return{id:'custom',name:'Custom',base:s.base};return THEME_PRESETS.purple}
+applyTheme(resolveSavedTheme());
+$('themePurple').onclick=()=>saveTheme(THEME_PRESETS.purple);
+$('themeBlue').onclick=()=>saveTheme(THEME_PRESETS.blue);
+$('themeHobbiton').onclick=()=>saveTheme(THEME_PRESETS.hobbiton);
+$('themeRivendell').onclick=()=>saveTheme(THEME_PRESETS.rivendell);
+$('themeLothlorien').onclick=()=>saveTheme(THEME_PRESETS.lothlorien);
+$('themeRohan').onclick=()=>saveTheme(THEME_PRESETS.rohan);
+$('themeGondor').onclick=()=>saveTheme(THEME_PRESETS.gondor);
 $('themeColor').oninput=()=>{const h=$('themeColor').value;$('themeHex').textContent=h.toUpperCase();$('themeRgb').textContent=`RGB ${hexRgb(h).join(', ')}`};
-$('applyCustomTheme').onclick=()=>saveTheme('Custom',$('themeColor').value);
-$('resetTheme').onclick=()=>saveTheme(THEME_PRESETS.purple.name,THEME_PRESETS.purple.base);
+$('applyCustomTheme').onclick=()=>saveTheme({id:'custom',name:'Custom',base:$('themeColor').value});
+$('resetTheme').onclick=()=>saveTheme(THEME_PRESETS.purple);
 
 $('exportBtn').onclick=()=>{
-  const d={version:'1.3.0',exportedAt:new Date().toISOString(),tasks,journals,gratitude,intention:intention.value,intentions,reflection:reflection.value,reflections,theme:JSON.parse(localStorage.getItem(K.theme)||'null')};
+  const d={version:'1.4.0',exportedAt:new Date().toISOString(),tasks,journals,gratitude,intention:intention.value,intentions,reflection:reflection.value,reflections,theme:JSON.parse(localStorage.getItem(K.theme)||'null')};
   const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=u;a.download='STEWARD-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),500);
 };
