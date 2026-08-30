@@ -67,6 +67,24 @@ input[type="color"]{height:48px;padding:4px}
 .theme-icon{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;margin-right:7px;border:1px solid #00000018;font-size:13px;vertical-align:-6px}
 @media(min-width:700px){.theme-preset-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
+
+/* v1.5.0 — Due Date Alert */
+.due-alert{padding:0;overflow:hidden}
+.due-alert-head{background:linear-gradient(120deg,var(--deep),var(--deep2));color:#fff;padding:18px 20px}
+.due-alert-kicker{font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:900;color:#e3d7ea}
+.due-alert-head h3{margin:5px 0 3px;font-size:20px}
+.due-alert-head p{margin:0;font-size:11px;color:#d9cce0}
+.due-alert-body{padding:16px 18px;max-height:52vh;overflow:auto;background:var(--panel)}
+.due-alert-item{border:1px solid var(--line);border-radius:13px;padding:11px 12px;margin-bottom:9px;background:var(--panel2)}
+.due-alert-item:last-child{margin-bottom:0}
+.due-alert-row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.due-alert-name{font-size:13px;font-weight:900;color:var(--text)}
+.due-alert-when{font-size:10px;font-weight:900;color:var(--mid);white-space:nowrap}
+.due-alert-meta{font-size:10px;color:var(--muted);margin-top:4px}
+.due-alert-actions{display:flex;gap:8px;justify-content:flex-end;padding:14px 18px 18px;background:var(--panel)}
+.due-alert-actions .primary{width:auto}
+.due-alert-actions .secondary{background:var(--panel)}
+
 @media(min-width:700px){.three{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
@@ -223,6 +241,22 @@ input[type="color"]{height:48px;padding:4px}
   <button data-view="settings"><span>⚙</span>Settings</button>
 </nav>
 
+
+<dialog id="dueAlertDialog">
+  <div class="due-alert">
+    <div class="due-alert-head">
+      <div class="due-alert-kicker">Due Date Alert</div>
+      <h3>Steward what needs your attention.</h3>
+      <p>Upcoming and overdue tasks</p>
+    </div>
+    <div class="due-alert-body" id="dueAlertList"></div>
+    <div class="due-alert-actions">
+      <button class="secondary" id="closeDueAlert" type="button">Close</button>
+      <button class="primary" id="viewDueTasks" type="button">View Tasks</button>
+    </div>
+  </div>
+</dialog>
+
 <dialog id="dlg">
 <form class="modal" onsubmit="return false">
   <h3>Create a Task</h3>
@@ -310,7 +344,7 @@ ginput=$('ginput'),intentionDisplayDate=$('intentionDisplayDate'),intentionArchi
 intentionSearchDateText=$('intentionSearchDateText'),intentionSearchDateNative=$('intentionSearchDateNative'),
 jdateText=$('jdateText'),jdateNative=$('jdateNative'),journalArchive=$('journalArchive'),journalArchiveList=$('journalArchiveList'),journalSearchDateText=$('journalSearchDateText'),journalSearchDateNative=$('journalSearchDateNative'),journalSearchKeyword=$('journalSearchKeyword'),
 reflectionDisplayDate=$('reflectionDisplayDate'),reflectionArchive=$('reflectionArchive'),reflectionArchiveList=$('reflectionArchiveList'),reflectionSearchDateText=$('reflectionSearchDateText'),reflectionSearchDateNative=$('reflectionSearchDateNative'),reflectionSearchKeyword=$('reflectionSearchKeyword'),
-tdueText=$('tdueText'),tdueNative=$('tdueNative');
+tdueText=$('tdueText'),tdueNative=$('tdueNative'),dueAlertDialog=$('dueAlertDialog'),dueAlertList=$('dueAlertList');
 
 function persist(){localStorage.setItem(K.tasks,JSON.stringify(tasks))}
 function taskHtml(t){return `<div class="task ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask(${t.id},this.checked)"><div class="taskbody"><div class="name">${esc(t.name)}</div><div class="meta">${esc(t.category)} · ${esc(t.priority)} priority${t.due?' · '+fmt(t.due):''}</div></div><button class="del" onclick="deleteTask(${t.id})">×</button></div>`}
@@ -493,6 +527,60 @@ document.querySelectorAll('[data-date-target]').forEach(btn=>btn.onclick=()=>{
   if(picker.showPicker)picker.showPicker();else picker.click();
 });
 
+
+/* v1.5.0 — Due Date Alert
+   Additive-only behavior. Existing task creation/completion logic is unchanged. */
+function localMidnight(dateString){
+  const [y,m,d]=dateString.split('-').map(Number);
+  return new Date(y,m-1,d,0,0,0,0);
+}
+function dueDayDiff(dateString){
+  const today=localMidnight(iso());
+  const due=localMidnight(dateString);
+  return Math.round((due-today)/86400000);
+}
+function dueLabel(diff){
+  if(diff<0){
+    const n=Math.abs(diff);
+    return `Overdue by ${n} day${n===1?'':'s'}`;
+  }
+  if(diff===0)return 'Due Today';
+  return `${diff} day${diff===1?'':'s'} remaining`;
+}
+function getDueAlertTasks(){
+  return tasks
+    .filter(t=>!t.done&&t.due)
+    .map(t=>({task:t,diff:dueDayDiff(t.due)}))
+    .filter(x=>Number.isFinite(x.diff)&&(x.diff<=7))
+    .sort((a,b)=>a.diff-b.diff);
+}
+function renderDueDateAlert(){
+  const items=getDueAlertTasks();
+  if(!items.length)return;
+  dueAlertList.innerHTML=items.map(({task,diff})=>`
+    <div class="due-alert-item">
+      <div class="due-alert-row">
+        <div class="due-alert-name">${esc(task.name)}</div>
+        <div class="due-alert-when">${dueLabel(diff)}</div>
+      </div>
+      <div class="due-alert-meta">${esc(task.category)} · ${esc(task.priority)} priority · ${fmt(task.due)}</div>
+    </div>
+  `).join('');
+  if(!dueAlertDialog.open)dueAlertDialog.showModal();
+}
+$('closeDueAlert').onclick=()=>dueAlertDialog.close();
+$('viewDueTasks').onclick=()=>{
+  dueAlertDialog.close();
+  document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.view==='tasks'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  $('tasks').classList.add('active');
+};
+dueAlertDialog.addEventListener('cancel',e=>{e.preventDefault();dueAlertDialog.close();});
+dueAlertDialog.addEventListener('click',e=>{
+  if(e.target===dueAlertDialog)e.preventDefault();
+});
+
+
 /* Appearance */
 const THEME_PRESETS={
 purple:{id:'purple',name:'Royal Purple',base:'#6f4589',deep:'#2f153f',deep2:'#44215b',mid:'#6f4589',lav:'#9d76b7',soft:'#f4edf8',panel:'#ffffff',panel2:'#fcfafd',text:'#2f2834',muted:'#7b7081',line:'#e8deee',gold:'#d8ba75',page:'#f8f4fb',hero2:'#72478b'},
@@ -522,7 +610,7 @@ $('applyCustomTheme').onclick=()=>saveTheme({id:'custom',name:'Custom',base:$('t
 $('resetTheme').onclick=()=>saveTheme(THEME_PRESETS.purple);
 
 $('exportBtn').onclick=()=>{
-  const d={version:'1.4.1',exportedAt:new Date().toISOString(),tasks,journals,gratitude,intention:intention.value,intentions,reflection:reflection.value,reflections,theme:JSON.parse(localStorage.getItem(K.theme)||'null')};
+  const d={version:'1.5.0',exportedAt:new Date().toISOString(),tasks,journals,gratitude,intention:intention.value,intentions,reflection:reflection.value,reflections,theme:JSON.parse(localStorage.getItem(K.theme)||'null')};
   const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=u;a.download='STEWARD-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),500);
 };
@@ -562,6 +650,7 @@ $('installBtn').onclick=async()=>{
 if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js'))}
 renderDailyVerse();
 render();
+setTimeout(renderDueDateAlert,120);
 </script>
 </body>
 </html>

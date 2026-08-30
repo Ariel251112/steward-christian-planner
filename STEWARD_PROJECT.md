@@ -1,7 +1,62 @@
+## v1.5.0 — Due Date Alert
+
+### Purpose
+STEWARD now provides an in-app Focus Popup when the app/site is opened and there are unfinished tasks requiring due-date attention.
+
+### Trigger Rules
+On app startup, STEWARD scans existing task data from `steward.tasks.v1`.
+
+The popup includes:
+- every unfinished overdue task
+- unfinished tasks due today
+- unfinished tasks due within the next 7 calendar days
+
+The popup excludes:
+- completed tasks
+- tasks without a Due Date
+- tasks more than 7 days away
+
+### Due-Date Language
+- overdue: `Overdue by N days`
+- today: `Due Today`
+- future: `N days remaining`
+
+The task row also shows:
+- category
+- priority
+- Due Date in `YYYY/MM/DD`
+
+### Focus Popup Interaction
+The popup title is:
+- **DUE DATE ALERT**
+- *Steward what needs your attention.*
+
+Actions:
+- **View Tasks** closes the alert and switches directly to the Tasks page
+- **Close** dismisses the popup
+
+Interaction rule:
+- clicking outside/backdrop does not dismiss the alert
+- Escape/Cancel is intercepted and closes cleanly
+- no browser/system notification permission is required
+
+### Architecture
+This is an app-internal alert only.
+- no backend
+- no push service
+- no cloud dependency
+- no notification permission
+- works from existing local task data
+- compatible with offline/local-first PWA behavior
+
+### Non-Regression Rule
+v1.5.0 is additive only.
+No existing v1.4.1 task, date, archive, theme, backup, Journal, Reflection, Gratitude, or Morning Intention behavior was intentionally changed.
+
 # STEWARD — Christian Daily Planner
 
 ## Project Status
-- **Current version:** v1.4.1 — Task Save Hotfix
+- **Current version:** v1.5.0 — Due Date Alert
 - **Primary platform:** Android + Google Chrome
 - **Architecture:** Local-first Progressive Web App (PWA)
 - **Hosting:** GitHub Pages over HTTPS
@@ -24,7 +79,7 @@ The Save Task handler still referenced the removed `tdue` element. Pressing Save
 - Invalid dates show a clear validation message instead of silently failing.
 - After a successful save, both date controls are cleared.
 - Existing tasks, archives, settings, and themes are unchanged.
-- Service-worker cache bumped to `steward-pwa-v1.4.1`.
+- Service-worker cache bumped to `steward-pwa-v1.5.0`.
 
 ## Themes Preserved
 - Royal Purple
@@ -52,19 +107,29 @@ The Save Task handler still referenced the removed `tdue` element. Pressing Save
 
 ## PWA
 Current cache:
-- `steward-pwa-v1.4.1`
+- `steward-pwa-v1.5.0`
 
 ## Mandatory Documentation Synchronization Rule
 `index.html` and `STEWARD_PROJECT.md` are a synchronized pair. Every meaningful update must keep both aligned, including service-worker cache/version documentation.
 
 ## Version History
+### v1.5.0 — Due Date Alert
+- Added startup Due Date Alert Focus Popup
+- Alerts for overdue, due-today, and next-7-day unfinished tasks
+- Excludes completed/no-date/far-future tasks
+- Added View Tasks shortcut
+- Added backdrop-safe modal behavior
+- No notification permission or backend required
+- Preserved all prior features and storage logic
+- Bumped cache to `steward-pwa-v1.5.0`
+
 
 ### v1.4.1 — Task Save Hotfix
 - Fixed Create Task Save button regression
 - Removed obsolete `tdue` DOM reference
 - Added due-date validation
 - Preserved all v1.4.0 themes and planner data
-- Bumped cache to `steward-pwa-v1.4.1`
+- Bumped cache to `steward-pwa-v1.5.0`
 
 ### v1.4.0 — New Theme Update
 - Added Hobbiton
