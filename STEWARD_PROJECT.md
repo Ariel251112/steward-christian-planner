@@ -1,49 +1,44 @@
 # STEWARD — Christian Daily Planner
 
 ## Project Status
-- **Current version:** v1.4.0 — New Theme Update
+- **Current version:** v1.4.1 — Task Save Hotfix
 - **Primary platform:** Android + Google Chrome
 - **Architecture:** Local-first Progressive Web App (PWA)
 - **Hosting:** GitHub Pages over HTTPS
 
-## v1.4.0 Theme Update
-STEWARD keeps one shared functional framework while each user/device can choose its own appearance.
+## v1.4.1 Task Save Hotfix
+A regression after the `YYYY/MM/DD` date-control refactor prevented Create Task from saving.
 
-### Available themes
+### Root Cause
+The Task Due Date UI had been migrated from the old `tdue` element to:
+- `tdueText` — user-facing `YYYY/MM/DD`
+- `tdueNative` — internal date picker
+
+The Save Task handler still referenced the removed `tdue` element. Pressing Save therefore threw a JavaScript error before the task could be persisted.
+
+### Fix
+- Save Task now reads `tdueText`.
+- Non-empty dates are validated as `YYYY/MM/DD`.
+- Task due dates are stored internally as `YYYY-MM-DD`.
+- Due Date remains optional.
+- Invalid dates show a clear validation message instead of silently failing.
+- After a successful save, both date controls are cleared.
+- Existing tasks, archives, settings, and themes are unchanged.
+- Service-worker cache bumped to `steward-pwa-v1.4.1`.
+
+## Themes Preserved
 - Royal Purple
 - Calm Blue
-- Hobbiton — warm moss green, parchment, earthy brown, brass/gold
-- Rivendell — silver blue, slate, mist, restrained gold
-- Lothlórien — golden green, ivory, luminous olive
-- Rohan — saddle brown, wheat gold, warm parchment, muted olive
-- Gondor — charcoal, steel blue, ivory, restrained antique gold
-- Custom RGB color
+- Hobbiton
+- Rivendell
+- Lothlórien
+- Rohan
+- Gondor
+- Custom RGB
 
-### Theme behavior
-- Theme selection changes the full STEWARD color system: header, Scripture hero, page background, cards, form surfaces, borders, progress bars, buttons, and navigation accents.
-- Theme preference is stored locally in `steward.theme.v1`.
-- Different devices using the same STEWARD URL can keep different themes.
-- Theme changes never alter planner content.
-- Theme preference remains included in JSON backup/restore.
-- Reset returns to Royal Purple.
-
-### Asset rule
-v1.4.0 uses CSS palettes, gradients, typography treatment, and generic symbols only. No movie artwork, logos, film stills, character images, or proprietary visual assets are embedded.
-
-## Existing Baseline Features
-- Daily Scripture rotation
-- Today's Three
-- Today's Tasks
-- Morning Intention + Saved Intentions Archive
-- Task management
-- Journal + Journal Archive
-- Prayer & Reflection dated archive
-- Gratitude
-- Reflection + Gratitude combined archive
-- Date and keyword search
-- Global user-facing date format `YYYY/MM/DD`
-- JSON backup/restore
-- Android PWA install support
+## Global Date Rule
+- User-facing dates: `YYYY/MM/DD`
+- Internal storage: `YYYY-MM-DD`
 
 ## LocalStorage Keys
 - `steward.tasks.v1`
@@ -56,46 +51,43 @@ v1.4.0 uses CSS palettes, gradients, typography treatment, and generic symbols o
 - `steward.theme.v1`
 
 ## PWA
-Current service-worker cache:
-- `steward-pwa-v1.4.0`
-
-## Data Safety Rules
-1. Never silently delete localStorage data.
-2. Theme changes must never modify planner records.
-3. User-facing dates remain `YYYY/MM/DD`.
-4. Backup must include all archives and theme preference.
-5. Preserve backward compatibility where reasonably possible.
+Current cache:
+- `steward-pwa-v1.4.1`
 
 ## Mandatory Documentation Synchronization Rule
-`index.html` and `STEWARD_PROJECT.md` are a synchronized pair. Every meaningful change must update both and keep service-worker cache/version documentation aligned.
+`index.html` and `STEWARD_PROJECT.md` are a synchronized pair. Every meaningful update must keep both aligned, including service-worker cache/version documentation.
 
 ## Version History
+
+### v1.4.1 — Task Save Hotfix
+- Fixed Create Task Save button regression
+- Removed obsolete `tdue` DOM reference
+- Added due-date validation
+- Preserved all v1.4.0 themes and planner data
+- Bumped cache to `steward-pwa-v1.4.1`
+
 ### v1.4.0 — New Theme Update
-- Added Hobbiton theme
-- Added Rivendell theme
-- Added Lothlórien theme
-- Added Rohan theme
-- Added Gondor theme
-- Preserved Royal Purple, Calm Blue, and Custom RGB
-- Expanded theme engine to full palette presets
-- Preserved per-device persistence and backup/restore
-- Bumped cache to `steward-pwa-v1.4.0`
+- Added Hobbiton
+- Added Rivendell
+- Added Lothlórien
+- Added Rohan
+- Added Gondor
+- Preserved Royal Purple, Calm Blue, Custom RGB
 
 ### v1.3.0 — Review Complete
-- Global `YYYY/MM/DD`
-- Journal Archive
-- Dated Reflection
-- Reflection + Gratitude Archive
-- Royal Purple / Calm Blue / Custom theme system
+- Added global `YYYY/MM/DD`
+- Added Journal Archive
+- Added dated Reflection + Reflection Archive
+- Added theme system
 
 ### v1.2.0 — Today Page Complete
-- Scripture polish and Saved Intentions Archive
+- Added Saved Intentions Archive
 
 ### v1.1.0 — Today Page Update
-- Daily Scripture rotation and explicit Save Intention
+- Added daily Scripture rotation and Save Intention
 
 ### v1.0.1 — Interaction Hotfix
-- Fixed deployed JavaScript interactions
+- Fixed initial deployed JavaScript interaction failure
 
 ### v1.0.0 — Android PWA Prototype
 - Initial installable STEWARD PWA
