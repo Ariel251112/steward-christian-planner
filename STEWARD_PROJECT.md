@@ -1,3 +1,69 @@
+## v1.6.0 — 365 Daily Scripture Library
+
+### Scope
+This is an additive Scripture-only update. Existing Tasks, Create Task, Due Date Alert, Today's Three, Archives, Themes, `YYYY/MM/DD` rules, JSON Backup/Restore, Journal, Prayer & Reflection, Gratitude, Morning Intention, and PWA behavior are preserved.
+
+### 365-verse Local Library
+STEWARD now creates a local library of exactly **365 English Scripture verses**.
+
+Source:
+- World English Bible (WEB)
+- Public-domain Scripture text
+- Seed source: public machine-readable `midvash/bible-data` WEB book files
+- No API key, account, backend, token, or secret is required
+
+The first-time seed draws from devotional-oriented books including Psalms, Proverbs, Isaiah, Matthew, John, Romans, Corinthians, Galatians, Ephesians, Philippians, Colossians, Thessalonians, Timothy, Hebrews, James, Peter, and 1 John.
+
+Candidate verses are filtered toward practical devotional themes such as faith, hope, love, wisdom, grace, mercy, peace, prayer, trust, strength, courage, gratitude, service, rest, and guidance.
+
+New storage key:
+- `steward.scriptureLibrary.v1`
+
+### First-seed behavior
+When a device does not yet have the 365 library:
+1. STEWARD immediately renders from the existing built-in 31-verse fallback so startup is never blocked.
+2. While online, it retrieves public-domain WEB book data.
+3. It selects 365 unique devotional verse records.
+4. The 365 records are saved to localStorage.
+5. Daily verse selection thereafter uses the local 365-verse library.
+
+If first-time seeding cannot complete because the device is offline, the app continues using the existing 31-verse fallback and retries on a later online opening.
+
+### Daily random lock
+New storage key:
+- `steward.dailyVerse.v1`
+
+Rules:
+- On the first opening of a new local calendar date, one verse is randomly selected.
+- The selected verse is locked to that date.
+- Refreshing, closing/reopening Chrome, reopening the installed PWA, navigating pages, or switching themes on the same date does not change it.
+- On the next local calendar date, a new random verse is selected.
+- The immediately previous verse is excluded from the next day's pool to avoid back-to-back repetition.
+
+Conceptual state:
+```json
+{
+  "date": "2026-08-30",
+  "verse": {
+    "id": "Ps.46.10",
+    "ref": "Psalms 46:10",
+    "text": "..."
+  }
+}
+```
+
+### Backup / Restore
+v1.6.0 adds these optional fields to JSON backup:
+- `scriptureLibrary`
+- `dailyVerse`
+
+Restore accepts them when present. Older backup files remain compatible.
+
+### UI
+No new controls are added. `VERSE FOR TODAY` keeps the existing visual design and still displays only:
+- verse text
+- Scripture reference
+
 ## v1.5.0 — Due Date Alert
 
 ### Purpose
@@ -56,7 +122,7 @@ No existing v1.4.1 task, date, archive, theme, backup, Journal, Reflection, Grat
 # STEWARD — Christian Daily Planner
 
 ## Project Status
-- **Current version:** v1.5.0 — Due Date Alert
+- **Current version:** v1.6.0 — 365 Daily Scripture Library
 - **Primary platform:** Android + Google Chrome
 - **Architecture:** Local-first Progressive Web App (PWA)
 - **Hosting:** GitHub Pages over HTTPS
@@ -79,7 +145,7 @@ The Save Task handler still referenced the removed `tdue` element. Pressing Save
 - Invalid dates show a clear validation message instead of silently failing.
 - After a successful save, both date controls are cleared.
 - Existing tasks, archives, settings, and themes are unchanged.
-- Service-worker cache bumped to `steward-pwa-v1.5.0`.
+- Service-worker cache bumped to `steward-pwa-v1.6.0`.
 
 ## Themes Preserved
 - Royal Purple
@@ -107,12 +173,23 @@ The Save Task handler still referenced the removed `tdue` element. Pressing Save
 
 ## PWA
 Current cache:
-- `steward-pwa-v1.5.0`
+- `steward-pwa-v1.6.0`
 
 ## Mandatory Documentation Synchronization Rule
 `index.html` and `STEWARD_PROJECT.md` are a synchronized pair. Every meaningful update must keep both aligned, including service-worker cache/version documentation.
 
 ## Version History
+### v1.6.0 — 365 Daily Scripture Library
+- Added 365-verse local Scripture library
+- Added first-time public-domain WEB seeding without API keys
+- Added one-random-verse-per-local-date behavior
+- Added same-day verse lock across refresh/reopen
+- Prevented immediate consecutive-day duplicates
+- Preserved existing 31-verse fallback for first-seed/offline resilience
+- Added Scripture library and current Daily Verse to JSON backup/restore
+- Preserved all v1.5.0 and earlier features
+- Bumped cache to `steward-pwa-v1.6.0`
+
 ### v1.5.0 — Due Date Alert
 - Added startup Due Date Alert Focus Popup
 - Alerts for overdue, due-today, and next-7-day unfinished tasks
@@ -121,7 +198,7 @@ Current cache:
 - Added backdrop-safe modal behavior
 - No notification permission or backend required
 - Preserved all prior features and storage logic
-- Bumped cache to `steward-pwa-v1.5.0`
+- Bumped cache to `steward-pwa-v1.6.0`
 
 
 ### v1.4.1 — Task Save Hotfix
@@ -129,7 +206,7 @@ Current cache:
 - Removed obsolete `tdue` DOM reference
 - Added due-date validation
 - Preserved all v1.4.0 themes and planner data
-- Bumped cache to `steward-pwa-v1.5.0`
+- Bumped cache to `steward-pwa-v1.6.0`
 
 ### v1.4.0 — New Theme Update
 - Added Hobbiton

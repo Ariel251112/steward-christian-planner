@@ -278,7 +278,7 @@ input[type="color"]{height:48px;padding:4px}
 
 <script>
 const $=id=>document.getElementById(id);
-const K={tasks:'steward.tasks.v1',journal:'steward.journal.v1',gratitude:'steward.gratitude.v1',intention:'steward.intention.v1',intentions:'steward.intentions.v1',reflection:'steward.reflection.v1',reflections:'steward.reflections.v1',theme:'steward.theme.v1'};
+const K={tasks:'steward.tasks.v1',journal:'steward.journal.v1',gratitude:'steward.gratitude.v1',intention:'steward.intention.v1',intentions:'steward.intentions.v1',reflection:'steward.reflection.v1',reflections:'steward.reflections.v1',theme:'steward.theme.v1',scriptureLibrary:'steward.scriptureLibrary.v1',dailyVerse:'steward.dailyVerse.v1'};
 const iso=()=>{const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`};
 const fmt=d=>d?d.replaceAll('-','/'):'';
 const parseDisplayDate=s=>{const m=String(s||'').trim().match(/^(\d{4})\/(\d{2})\/(\d{2})$/);if(!m)return '';const v=`${m[1]}-${m[2]}-${m[3]}`,dt=new Date(v+'T00:00:00');return Number.isNaN(dt.getTime())?'':v};
@@ -319,13 +319,128 @@ const DAILY_VERSES=[
 {text:"With God all things are possible.",ref:"Matthew 19:26"},
 {text:"Peace I leave with you. My peace I give to you; not as the world gives, I give to you.",ref:"John 14:27"}
 ];
-function renderDailyVerse(){
+const SCRIPTURE_SOURCE_BASE='https://raw.githubusercontent.com/midvash/bible-data/main/versions/en/web/books/';
+const SCRIPTURE_BOOKS=[
+  ['Ps','Psalms'],['Prov','Proverbs'],['Isa','Isaiah'],['Matt','Matthew'],['John','John'],
+  ['Rom','Romans'],['1Cor','1 Corinthians'],['2Cor','2 Corinthians'],['Gal','Galatians'],
+  ['Eph','Ephesians'],['Phil','Philippians'],['Col','Colossians'],['1Thess','1 Thessalonians'],
+  ['2Thess','2 Thessalonians'],['1Tim','1 Timothy'],['2Tim','2 Timothy'],['Heb','Hebrews'],
+  ['Jas','James'],['1Pet','1 Peter'],['2Pet','2 Peter'],['1John','1 John']
+];
+const DEVOTIONAL_WORDS=[
+  'god','lord','love','loves','loving','faith','hope','peace','joy','rejoice','grace','mercy',
+  'merciful','kind','kindness','trust','wisdom','wise','pray','prayer','heart','strength',
+  'strong','courage','fear','rest','refuge','light','truth','good','goodness','righteous',
+  'bless','blessed','blessing','thank','thanks','thanksgiving','comfort','help','sustain',
+  'save','salvation','spirit','patience','gentle','gentleness','forgive','forgiveness',
+  'seek','word','way','path','walk','serve','service','give','giving','care','cares'
+];
+
+function scriptureRef(bookName,chapter,verse){
+  return `${bookName} ${chapter}:${verse}`;
+}
+function scriptureCandidate(text){
+  const clean=String(text||'').trim();
+  if(clean.length<35||clean.length>230)return false;
+  const lower=clean.toLowerCase();
+  return DEVOTIONAL_WORDS.some(word=>lower.includes(word));
+}
+function shuffleArray(arr){
+  const copy=[...arr];
+  for(let i=copy.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [copy[i],copy[j]]=[copy[j],copy[i]];
+  }
+  return copy;
+}
+function getStoredScriptureLibrary(){
+  try{
+    const lib=JSON.parse(localStorage.getItem(K.scriptureLibrary)||'null');
+    return Array.isArray(lib)&&lib.length===365?lib:null;
+  }catch(e){return null;}
+}
+async function buildScriptureLibrary(){
+  const existing=getStoredScriptureLibrary();
+  if(existing)return existing;
+
+  const results=await Promise.allSettled(
+    SCRIPTURE_BOOKS.map(async([osis,bookName])=>{
+      const res=await fetch(`${SCRIPTURE_SOURCE_BASE}${osis}.json`,{cache:'force-cache'});
+      if(!res.ok)throw new Error(`Scripture source unavailable: ${osis}`);
+      const data=await res.json();
+      const rows=[];
+      (data.chapters||[]).forEach(ch=>{
+        (ch.verses||[]).forEach(v=>{
+          const text=String(v.text||'').trim();
+          if(scriptureCandidate(text)){
+            rows.push({
+              id:`${osis}.${ch.chapter}.${v.number}`,
+              ref:scriptureRef(bookName,ch.chapter,v.number),
+              text
+            });
+          }
+        });
+      });
+      return rows;
+    })
+  );
+
+  const all=[];
+  const seen=new Set();
+  results.forEach(r=>{
+    if(r.status!=='fulfilled')return;
+    r.value.forEach(v=>{
+      if(!seen.has(v.id)){
+        seen.add(v.id);
+        all.push(v);
+      }
+    });
+  });
+
+  if(all.length<365)throw new Error('Not enough devotional Scripture candidates');
+  const library=shuffleArray(all).slice(0,365);
+  localStorage.setItem(K.scriptureLibrary,JSON.stringify(library));
+  return library;
+}
+function chooseDailyVerse(library){
   const today=iso();
-  const [y,m,d]=today.split('-').map(Number);
-  const dayNumber=Math.floor(Date.UTC(y,m-1,d)/86400000);
-  const verse=DAILY_VERSES[Math.abs(dayNumber)%DAILY_VERSES.length];
+  let state=null;
+  try{state=JSON.parse(localStorage.getItem(K.dailyVerse)||'null')}catch(e){}
+  if(state&&state.date===today&&state.verse&&state.verse.text&&state.verse.ref){
+    return state.verse;
+  }
+
+  const previousId=state?.verse?.id||null;
+  const eligible=library.filter(v=>v.id!==previousId);
+  const verse=eligible[Math.floor(Math.random()*eligible.length)]||library[0];
+  localStorage.setItem(K.dailyVerse,JSON.stringify({date:today,verse}));
+  return verse;
+}
+function renderVerseToHero(verse){
   $('verseText').textContent=verse.text;
   $('verseRef').textContent=verse.ref;
+}
+async function renderDailyVerse(){
+  const fallbackLibrary=DAILY_VERSES.map((v,i)=>({id:`fallback-${i}`,ref:v.ref,text:v.text}));
+  const existing=getStoredScriptureLibrary();
+
+  // Render immediately so STEWARD never waits on network.
+  renderVerseToHero(chooseDailyVerse(existing||fallbackLibrary));
+
+  // Seed the 365-verse local library once, then upgrade today's verse if it was only a fallback.
+  if(!existing){
+    try{
+      const library=await buildScriptureLibrary();
+      let current=null;
+      try{current=JSON.parse(localStorage.getItem(K.dailyVerse)||'null')}catch(e){}
+      if(current?.date===iso()&&String(current?.verse?.id||'').startsWith('fallback-')){
+        localStorage.removeItem(K.dailyVerse);
+        renderVerseToHero(chooseDailyVerse(library));
+      }
+    }catch(err){
+      console.warn('STEWARD Scripture library seed deferred; using offline fallback.',err);
+    }
+  }
 }
 
 let tasks=JSON.parse(localStorage.getItem(K.tasks)||'null')||[
@@ -610,7 +725,7 @@ $('applyCustomTheme').onclick=()=>saveTheme({id:'custom',name:'Custom',base:$('t
 $('resetTheme').onclick=()=>saveTheme(THEME_PRESETS.purple);
 
 $('exportBtn').onclick=()=>{
-  const d={version:'1.5.0',exportedAt:new Date().toISOString(),tasks,journals,gratitude,intention:intention.value,intentions,reflection:reflection.value,reflections,theme:JSON.parse(localStorage.getItem(K.theme)||'null')};
+  const d={version:'1.6.0',exportedAt:new Date().toISOString(),tasks,journals,gratitude,intention:intention.value,intentions,reflection:reflection.value,reflections,theme:JSON.parse(localStorage.getItem(K.theme)||'null'),scriptureLibrary:JSON.parse(localStorage.getItem(K.scriptureLibrary)||'null'),dailyVerse:JSON.parse(localStorage.getItem(K.dailyVerse)||'null')};
   const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=u;a.download='STEWARD-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),500);
 };
@@ -636,6 +751,8 @@ $('importFile').onchange=async e=>{
       localStorage.setItem(K.reflections,JSON.stringify(migratedReflection));
     }
     if(d.theme&&d.theme.base)localStorage.setItem(K.theme,JSON.stringify(d.theme));
+    if(Array.isArray(d.scriptureLibrary)&&d.scriptureLibrary.length===365)localStorage.setItem(K.scriptureLibrary,JSON.stringify(d.scriptureLibrary));
+    if(d.dailyVerse&&d.dailyVerse.date&&d.dailyVerse.verse)localStorage.setItem(K.dailyVerse,JSON.stringify(d.dailyVerse));
     location.reload();
   }catch(err){alert('Invalid backup file.')}
 };
